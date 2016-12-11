@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	inputData, _ := ioutil.ReadFile("day6/input.txt")
+	inputData, _ := ioutil.ReadFile("day06/input.txt")
 	input := string(inputData)
 	rows := strings.Split(input, "\n")
 

@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	inputData, _ := ioutil.ReadFile("day9/input.txt")
+	inputData, _ := ioutil.ReadFile("day09/input.txt")
 	input := string(inputData)
 
 	data := strings.TrimSpace(input)

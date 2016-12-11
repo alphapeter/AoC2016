@@ -14,7 +14,7 @@ type triangle struct {
 }
 
 func main() {
-	inputData, _ := ioutil.ReadFile("day3/input.txt")
+	inputData, _ := ioutil.ReadFile("day03/input.txt")
 	input := string(inputData)
 
 	rows := strings.Split(input, "\n")

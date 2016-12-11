@@ -18,7 +18,7 @@ func main() {
 	d := display{rows: 6, columns: 50}
 	d.init()
 
-	inputData, _ := ioutil.ReadFile("day8/input.txt")
+	inputData, _ := ioutil.ReadFile("day08/input.txt")
 	input := string(inputData)
 
 	rows := strings.Split(input, "\n")
