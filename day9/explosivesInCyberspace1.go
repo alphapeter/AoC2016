@@ -7,55 +7,89 @@ import (
 	"strings"
 )
 
-func main() {
-	inputData, _ := ioutil.ReadFile("day9/input.txt")
-	input := string(inputData)
+type NodeType int
 
-	data := strings.TrimSpace(input)
+const (
+	VALUE NodeType = 0
+	BOT NodeType = 1
+	OUTPUT NodeType = 2
+)
+type Node struct{
+	Name string
+	OutHigh *Node
+	OutLow *Node
+	InHigh *Node
+	InLow *Node
 
-	//test cases
-	//data := "ADVENT"
-	//data := "A(1x5)BC"
-	//data := "(3x3)XYZ"
-	//data := "(6x1)(1x3)A"
-	//data := "X(8x2)(3x3)ABCY"
+	Type NodeType
 
-	v := "s" + "sf"
-	fmt.Print(v)
-
-	decompressed := decompress(data)
-
-	fmt.Println("answer:", len(decompressed))
+	Value int
 }
 
-func decompress(s string) string {
-	for i := 0; i < len(s); i++ {
-		if s[i] == '(' {
-			length, multiplier, offset := parseMarker(s[i:])
-			j := i + offset + 1
-			return s[0:i] + appendMultiple(s[j:j+length], multiplier) + decompress(s[j+length:])
+func main() {
+	nodes := make(map[string]Node)
+	inputData, _ := ioutil.ReadFile("day10/input.txt")
+	input := strings.Split(strings.TrimSpace(string(inputData)), "\n")
+
+	for row := range input{
+		command := strings.Fields(row)
+		if(command[0] == "bot"){
+			//bot
+			botNr := parseInt(command[5])
+			botNode := getOrCreateNode(nodes, "bot" + botNr, BOT)
+			botNode.Type = BOT
+
+			setLow(nodes, botNode, command[5:6])
+			setHigh(nodes, botNode, command[10:11])
 		}
 	}
-	return s
-}
 
-func appendMultiple(s string, multiplier int) string {
-	if multiplier == 0 {
-		return ""
+	for row := range input{
+		command := strings.Fields(row)
+		if(command[0] == "value"){
+			//value
+			value := parseInt(command[1])
+			valueNode := getOrCreateNode(nodes, "value" + value, VALUE)
+			valueNode.Value = value
+			//bot
+			botNr := parseInt(command[5])
+			botNode := getOrCreateNode(nodes, "bot" + botNr, BOT)
+			if(botNode.InLow == nil){
+				botNode.InLow = valueNode
+			}else{
+				botNode.InHigh = valueNode
+			}
+		}
 	}
-	return s + appendMultiple(s, multiplier-1)
+
 }
 
-func parseMarker(s string) (int, int, int) {
+func setHigh(nodes map[string]Node, node* Node, command string){
+	if(command[0] == bot){
 
-	markerEnd := strings.Index(s, ")")
-	marker := s[1:markerEnd]
-	numbers := strings.Split(marker, "x")
-	length := parseInt(numbers[0])
-	multiplier := parseInt(numbers[1])
+	}
+}
+func getType(s string){
+	switch s {
+	case "bot": return BOT
 
-	return length, multiplier, markerEnd
+	}
+	if(s == "bot"){
+		return BOT
+	}
+	else{
 
+}
+}
+
+func getOrCreateNode(bots* map[string]Node, name string, t NodeType) Node{
+	bot, ok := bots[name]
+	if(!ok){
+		bot = Node{Name: "bot" + name}
+		bot.Type = t
+		bots[name] = bot
+	}
+	return bot
 }
 
 func parseInt(s string) int {
