@@ -13,7 +13,7 @@ func main() {
 
 	rows := strings.Split(input, "\n")
 	fmt.Printf("answer 1: %d\n", run(rows, map[string]int{"a": 7}))
-	//fmt.Printf("answer 2: %d\n", run(rows, map[string]int{"c": 1}))
+	fmt.Printf("answer 2: %d\n", run(rows, map[string]int{"c": 12}))
 }
 
 func run(rows []string, registers map[string]int) int {
