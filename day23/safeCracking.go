@@ -12,14 +12,23 @@ func main() {
 	input := string(inputData)
 
 	rows := strings.Split(input, "\n")
-	fmt.Printf("answer 1: %d\n", run(rows, map[string]int{"a": 7}))
-	fmt.Printf("answer 2: %d\n", run(rows, map[string]int{"c": 12}))
+	fmt.Printf("answer 1: %d\n", run(getCommands(rows), map[string]int{"a": 7}))
+	fmt.Printf("answer 2: %d\n", run(getCommands(rows), map[string]int{"a": 12}))
 }
 
-func run(rows []string, registers map[string]int) int {
+func getCommands(rows []string) [][]string {
+	commands := [][]string{}
+	for _, row := range rows {
+		if row != "" {
+			commands = append(commands, strings.Fields(row))
+		}
+	}
+	return commands
+}
 
-	for pPointer := 0; pPointer < len(rows); pPointer++ {
-		command := strings.Fields(rows[pPointer])
+func run(commands [][]string, registers map[string]int) int {
+	for pPointer := 0; pPointer < len(commands); pPointer++ {
+		command := commands[pPointer]
 		if len(command) == 0 {
 			continue
 		}
@@ -47,42 +56,57 @@ func run(rows []string, registers map[string]int) int {
 			break
 		case "jnz":
 			var val int
-			if rune(command[1][0]) >= 'a' {
-				val = registers[command[1]]
-			} else {
+			if rune(command[1][0]) < 'a' { // number
 				val = parseInt(command[1])
-			}
-			var offset int
-			if rune(command[2][0]) >= 'a' {
-				offset = registers[command[2]]
+				if val != 0 {
+					pPointer = pPointer + getOffset(command, registers) - 1
+				}
 			} else {
-				offset = parseInt(command[2])
-			}
-			if val != 0 {
-				pPointer = pPointer + offset - 1
+				val = registers[command[1]]
+				if val != 0 {
+					if incBy(pPointer, command, commands) { //optimize increase by (dec inc jnz or inc dec jnz)
+						incByCmd := commands[pPointer-1]
+						if commands[pPointer-1][0] == "dec" {
+							incByCmd = commands[pPointer-2]
+						}
+						registers[incByCmd[1]] += registers[command[1]]
+						registers[command[1]] = 0
+
+					} else if increaseByMultiplication(pPointer, command, commands) { //optimize multiplication
+						inc := commands[pPointer-4][1]
+						factor1 := command[1]
+						factor2 := commands[pPointer-5][1]
+
+						registers[inc] += registers[factor1] * registers[factor2]
+						registers[command[1]] = 0
+					} else {
+						pPointer = pPointer + getOffset(command, registers) - 1
+					}
+				}
 			}
 			break
 		case "tgl":
 			insPointer := pPointer + registers[command[1]]
-			if insPointer >= len(rows) || insPointer <= 0 {
+			if insPointer >= len(commands) || insPointer <= 0 {
 				continue
 			}
 
-			tglRow := strings.Fields(rows[insPointer])
+			tglRow := commands[insPointer]
 			tglCommand := tglRow[0]
 			tglArguments := tglRow[1:]
 
 			if len(tglArguments) == 1 {
 				if tglCommand == "inc" {
-					rows[insPointer] = "dec " + tglArguments[0]
+					commands[insPointer][0] = "dec"
+
 				} else {
-					rows[insPointer] = "inc " + tglArguments[0]
+					commands[insPointer][0] = "inc"
 				}
 			} else { //binary
 				if tglCommand == "jnz" {
-					rows[insPointer] = "cpy " + tglArguments[0] + " " + tglArguments[1]
+					commands[insPointer][0] = "cpy"
 				} else {
-					rows[insPointer] = "jnz " + tglArguments[0] + " " + tglArguments[1]
+					commands[insPointer][0] = "jnz"
 				}
 			}
 		default:
@@ -90,6 +114,22 @@ func run(rows []string, registers map[string]int) int {
 		}
 	}
 	return registers["a"]
+}
+func increaseByMultiplication(pPointer int, command []string, commands [][]string) bool {
+	return parseInt(command[2]) == -5 && rune(commands[pPointer-5][1][0]) >= 'a'
+}
+func incBy(pPointer int, command []string, commands [][]string) bool {
+	return parseInt(command[2]) == -2 && ((commands[pPointer-1][0] == "dec" && commands[pPointer-2][0] == "inc") || (commands[pPointer-1][0] == "inc" && commands[pPointer-2][0] == "dec"))
+}
+
+func getOffset(command []string, registers map[string]int) int {
+	var offset int
+	if rune(command[2][0]) >= 'a' {
+		offset = registers[command[2]]
+	} else {
+		offset = parseInt(command[2])
+	}
+	return offset
 }
 
 func parseInt(s string) int {
